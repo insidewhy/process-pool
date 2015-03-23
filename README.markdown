@@ -9,8 +9,14 @@ process-pool allows you to maintain a set of sub-processes with a cached state t
 ## Using process pool
 
 ```javascript
+var moment = require('moment')
 var ProcessPool = require('process-pool')
+
+// Limit number of running processes to two.
 var pool = new ProcessPool({ length: 2 })
+
+var begin = moment()
+function time() { return moment().diff(start, 'seconds') }
 
 var func = pool.prepare(function() {
   // code here is run in the subprocess before it is first called, this allows you
@@ -20,24 +26,27 @@ var func = pool.prepare(function() {
   // is called from a sub-process.
   return function(value) {
     return new Promise(function(resolve) {
-      setTimeout(function() { resolve(p * 2) }, 1000)
+      console.log('begin %s: %s', time(), returnValue)
+      setTimeout(function() { resolve(p * 10) }, 1000)
     })
   }
 })
 
-var begin = moment()
-for (var i = 0; i < 3; ++i) {
+for (var i = 1; i < 4; ++i) {
   func(i).then(function(returnValue) {
-    console.log("%s: %s", moment().diff(start, 'seconds'), returnValue)
+    console.log('end %s: %s', time(), returnValue)
   })
 }
 ```
 
 This would print:
 ```
-1: 0
-1: 2
-2: 4
+begin 0: 1
+begin 0: 2
+end 1: 10
+end 1: 20
+begin 1: 3
+end 2: 30
 ```
 
-The third result comes a second after the first due to the limited process queue length.
+The process pool is set to run two processes concurrently, this delays the execution of the third call by a second.
