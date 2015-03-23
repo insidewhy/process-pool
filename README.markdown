@@ -10,7 +10,7 @@ process-pool allows you to maintain a set of sub-processes with a cached state t
 
 ```javascript
 var ProcessPool = require('process-pool')
-var pool = new ProcessPool
+var pool = new ProcessPool({ length: 2 })
 
 var func = pool.prepare(function() {
   // code here is run in the subprocess before it is first called, this allows you
@@ -25,13 +25,19 @@ var func = pool.prepare(function() {
   }
 })
 
-func(1).then(function(returnValue) {
-  console.log(returnValue)
-})
-
-func.restart(2).then(function(returnValue) {
-  console.log(returnValue)
-})
+var begin = moment()
+for (var i = 0; i < 3; ++i) {
+  func(i).then(function(returnValue) {
+    console.log("%s: %s", moment().diff(start, 'seconds'), returnValue)
+  })
+}
 ```
 
-This would print "4" after 1000 seconds. The first invocation gets replaced by the call to `restart`.
+This would print:
+```
+1: 0
+1: 2
+2: 4
+```
+
+The third result comes a second after the first due to the limited process queue length.
