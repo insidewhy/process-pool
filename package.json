@@ -1,0 +1,44 @@
+{
+  "name": "process-pool",
+  "version": "0.0.1",
+  "description": "Maintain a set of sub-processes with a cached state then multiplex them over several CPU cores.",
+  "main": "lib/ProcessPool",
+  "directories": {
+    "lib": "./lib"
+  },
+  "scripts": {
+    "test": "grunt test",
+    "install": "grunt build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sighjs/sigh.git"
+  },
+  "keywords": [
+    "subprocess",
+    "pool"
+  ],
+  "author": "James Pike <github@chilon.net>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nuisanceofcats/process-pool/issues"
+  },
+  "dependencies": {
+    "babel": "^4.6.6",
+    "bluebird": "^2.9.14",
+    "grunt": "0.4.5",
+    "grunt-contrib-clean": "^0.6.0",
+    "jit-grunt": "0.9.1",
+    "lodash": "3.3.1",
+    "rewire": "2.1.3",
+    "source-map": "^0.4.0",
+    "source-map-support": "0.2.9"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "grunt": "^0.4.5",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-mocha-test": "^0.12.7",
+    "mocha": "^2.2.1"
+  }
+}
