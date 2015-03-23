@@ -12,6 +12,7 @@ export default class {
     this.length = length
     this.running = []
     this.subProcesses = []
+    this.queue = []
   }
 
   prepare(func) {
@@ -26,7 +27,10 @@ export default class {
     // TODO: schedule so that at most this.length sub processes can run
     // TODO: detect subprocess exit failure
     return new Promise(resolve => {
-      subProcess.once('message', res => resolve(JSON.parse(res)))
+      subProcess.once('message', res => {
+        resolve(JSON.parse(res))
+        // TODO: remove from this.subProcesses and schedule item from queue
+      })
       subProcess.send(JSON.stringify(args))
     })
   }
