@@ -56,7 +56,48 @@ The process pool is set to run two processes concurrently, this delays the execu
 Many functions can be wrapped to run in a subprocess by a single pool via calls to `prepare` using the `processLimit` option as shown in the previous example. By default `processLimit` copies of each `prepare`d function are created (so up to `processLimit` * `number of calls to prepare` can be created). This can be restricted on a per function basis:
 
 ```javascript
+var Promise = require('bluebird')
 var ProcessPool = require('process-pool')
 var pool = new ProcessPool({ processLimit: 3 })
-pool.prepare(function() { /* ... */ }, { processLimit: 2 })
+
+// Return a promise that delays execution for the given time period.
+function delay(milliseconds) {
+  return new Promise(function(resolve) {
+    setTimeout(resolve, milliseconds)
+  }
+}
+
+var twoFunc = pool.prepare(function() {
+  var nCalls = 0
+  return function() {
+    console.log("twoFunc", ++nCalls)
+    return delay(1000)
+  }
+}, { processLimit: 2 })
+
+var oneFunc = pool.prepare(function() {
+  var nCalls = 0
+  return function() {
+    console.log("oneFunc", ++nCalls)
+    return delay(1000)
+  }
+}, { processLimit: 1 })
+
+twoFunc()
+twoFunc()
+twoFunc()
+oneFunc()
 ```
+
+This would print:
+
+```
+twoFunc 1
+twoFunc 2
+oneFunc 1
+```
+followed by
+```
+twoFunc 3
+```
+a second later.
