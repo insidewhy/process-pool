@@ -13,7 +13,7 @@ var moment = require('moment')
 var ProcessPool = require('process-pool')
 
 // Limit number of running processes to two.
-var pool = new ProcessPool({ length: 2 })
+var pool = new ProcessPool({ processLimit: 2 })
 
 var begin = moment()
 function time() { return moment().diff(start, 'seconds') }
@@ -50,3 +50,13 @@ end 2: 30
 ```
 
 The process pool is set to run two processes concurrently, this delays the execution of the third call by a second.
+
+## Running multiple functions with a single pool
+
+Many functions can be wrapped to run in a subprocess by a single pool via calls to `prepare` using the `processLimit` option as shown in the previous example. By default `processLimit` copies of each `prepare`d function are created (so up to `processLimit` * `number of calls to prepare` can be created). This can be restricted on a per function basis:
+
+```javascript
+var ProcessPool = require('process-pool')
+var pool = new ProcessPool({ processLimit: 3 })
+pool.prepare(function() { /* ... */ }, { processLimit: 2 })
+```

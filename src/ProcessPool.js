@@ -8,14 +8,15 @@ import path from 'path'
  */
 export default class {
   // TODO: default to number of CPU cores
-  constructor({ length = 4 } = {}) {
-    this.length = length
+  constructor({ processLimit = 4 } = {}) {
+    this.processLimit = processLimit
     this.running = []
     this.subProcesses = []
     this.queue = []
   }
 
-  prepare(func) {
+  prepare(func, { processLimit = this.processLimit, replace = false } = {}) {
+    // TODO: create `processLimit` resources
     var subProcess = child_process.fork(
       path.join(__dirname, 'childProcess'),
       [ func.toString() ]
@@ -24,7 +25,7 @@ export default class {
   }
 
   _runInSubprocess(subProcess, ...args) {
-    // TODO: schedule so that at most this.length sub processes can run
+    // TODO: schedule so that at most this.processLimit sub processes can run
     // TODO: detect subprocess exit failure
     return new Promise(resolve => {
       subProcess.once('message', res => {
