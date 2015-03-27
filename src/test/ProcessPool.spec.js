@@ -20,4 +20,12 @@ describe('process pool', () => {
       })
     }
   )
+
+  // TODO: need chai thing or utility to verify promise fails
+  xit('should catch a thrown exception in a sub-process and fail the promise', () => {
+    var pool = new ProcessPool
+    // var func = pool.prepare(() => (arg1, arg2) => throw Error('ohno'))
+    // return func(2, 3).should.be.rejected
+  }
+  )
 })

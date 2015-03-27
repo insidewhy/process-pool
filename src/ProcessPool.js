@@ -1,6 +1,26 @@
 import Promise from 'bluebird'
 import child_process from 'child_process'
 import path from 'path'
+import _ from 'lodash'
+
+import FunctionPool from './FunctionPool'
+
+/**
+ * Take sub-process and wrap the messaging to/back into a function that accepts
+ * arguments to send over IPC and returns a promise that will resolve to the
+ * return value, received via IPC.
+ */
+function wrapSubprocess(subProcess) {
+  // TODO: use utility to bind promise from event instead of creating the promise manually
+  return (...args) => new Promise(resolve => {
+    subProcess.once('message', res => {
+      resolve(JSON.parse(res))
+    })
+
+    // TODO: schedule so that at most this.processLimit sub processes can run
+    subProcess.send(JSON.stringify(args))
+  })
+}
 
 /**
  * Pool class with fields:
@@ -16,23 +36,15 @@ export default class {
   }
 
   prepare(func, { processLimit = this.processLimit, replace = false } = {}) {
-    // TODO: create `processLimit` resources
-    var subProcess = child_process.fork(
+    // TODO: add hooks to detect subprocess exit failure
+    var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
       path.join(__dirname, 'childProcess'),
       [ func.toString() ]
-    )
-    return this._runInSubprocess.bind(this, subProcess)
+    ))
+    .map(wrapSubprocess)
+
+    var func = new FunctionPool(subProcesses)
+    return func.facade()
   }
 
-  _runInSubprocess(subProcess, ...args) {
-    // TODO: schedule so that at most this.processLimit sub processes can run
-    // TODO: detect subprocess exit failure
-    return new Promise(resolve => {
-      subProcess.once('message', res => {
-        resolve(JSON.parse(res))
-        // TODO: remove from this.subProcesses and schedule item from queue
-      })
-      subProcess.send(JSON.stringify(args))
-    })
-  }
 }

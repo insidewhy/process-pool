@@ -25,6 +25,8 @@ var func = pool.prepare(function() {
   // this is the function run in the sub-process whenever the wrapping function
   // is called from a sub-process.
   return function(value) {
+    // the promise is used to keep the process active for a second, usually you
+    // would not use promises for this purpose in a process pool.
     return new Promise(function(resolve) {
       console.log('begin %s: %s', time(), returnValue)
       setTimeout(function() { resolve(p * 10) }, 1000)
