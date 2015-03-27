@@ -1,16 +1,14 @@
 import Promise from 'bluebird'
 
 /**
- * This schedules work out to a number of promise returning functions, each function
- * remains "busy" while it has been called and then becomes free again when the
- * call's promise is rejected or resolved.
+ * This schedules work out to a number of promise returning functions, after
+ * each function has been called it will remain unavailable for future calls
+ * until the promise returned by the outstanding call is resolved or rejected.
  */
 export default class {
   constructor(funcs) {
     // functions ready to be called
     this.free = funcs.slice(0)
-    // functions currently running or scheduled
-    this.busy = []
     this.callQueue = []
   }
 
