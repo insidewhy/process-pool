@@ -12,9 +12,12 @@ import FunctionPool from './FunctionPool'
  */
 function wrapSubprocess(subProcess) {
   // TODO: use utility to bind promise from event instead of creating the promise manually
-  return (...args) => new Promise(resolve => {
+  return (...args) => new Promise((resolve, reject) => {
     subProcess.once('message', res => {
-      resolve(JSON.parse(res))
+      if (res.$$error$$)
+        reject(JSON.parse(res.$$error$$))
+      else
+        resolve(JSON.parse(res))
     })
 
     // TODO: schedule so that at most this.processLimit sub processes can run
