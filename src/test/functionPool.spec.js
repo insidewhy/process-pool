@@ -1,14 +1,14 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
-import FunctionPool from '../FunctionPool'
+import functionPool from '../functionPool'
 
 var delay = time => new Promise(resolve => setTimeout(resolve, time))
 
 describe('function pool', () => {
   it('should schedule a single function call', () => {
-    var pool = new FunctionPool([ arg => Promise.resolve(arg + 5) ])
+    var pool = functionPool([ arg => Promise.resolve(arg + 5) ])
 
-    return pool.call(4).then(result => {
+    return pool(4).then(result => {
       result.should.equal(9)
     })
   })
@@ -16,10 +16,10 @@ describe('function pool', () => {
   it('should schedule four calls over two functions', () => {
     var defs = _.range(0, 4).map(Promise.defer)
     var nCalls = 0
-    var pool = new FunctionPool(_.range(0, 2).map(idx => () => {
+    var pool = functionPool(_.range(0, 2).map(idx => () => {
       return defs[nCalls++].promise
     }))
-    var promises = _.range(0, 4).map(() => pool.call())
+    var promises = _.range(0, 4).map(() => pool())
 
     return delay(10).then(() => {
       nCalls.should.equal(2)

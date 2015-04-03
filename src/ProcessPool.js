@@ -3,7 +3,7 @@ import child_process from 'child_process'
 import path from 'path'
 import _ from 'lodash'
 
-import FunctionPool from './FunctionPool'
+import functionPool from './functionPool'
 
 /**
  * Take sub-process and wrap the messaging to/back into a function that accepts
@@ -46,8 +46,6 @@ export default class {
     ))
     .map(wrapSubprocess)
 
-    var func = new FunctionPool(subProcesses)
-    return func.facade()
+    return functionPool(subProcesses)
   }
-
 }
