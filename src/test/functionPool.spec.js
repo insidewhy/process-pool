@@ -16,9 +16,7 @@ describe('function pool', () => {
   it('should schedule four calls over two functions', () => {
     var defs = _.range(0, 4).map(Promise.defer)
     var nCalls = 0
-    var pool = functionPool(_.range(0, 2).map(() => () => {
-      return defs[nCalls++].promise
-    }))
+    var pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
     var promises = _.range(0, 4).map(() => pool())
 
     return delay(10).then(() => {
