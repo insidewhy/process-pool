@@ -37,11 +37,15 @@ export default class {
     this.limiter = functionLimit(func => func(), processLimit)
   }
 
-  prepare(func, { processLimit = this.processLimit, replace = false } = {}) {
+  prepare(
+    func,
+    context = undefined,
+    { processLimit = this.processLimit, replace = false } = {}
+  ) {
     // TODO: add hooks to detect subprocess exit failure
     var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
       path.join(__dirname, 'childProcess'),
-      [ func.toString() ]
+      [ func.toString(), context ]
     ))
     .map(subProcess => this.limiter(wrapSubprocess.bind(this, subProcess)))
 
