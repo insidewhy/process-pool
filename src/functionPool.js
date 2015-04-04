@@ -27,12 +27,10 @@ export default function(funcs) {
       free.push(func)
   }
 
-  return (...args) => {
-    return getNextFreeFunction().then(
-      func => func(...args).then(result => {
-        promiseFulfilled(func)
-        return result
-      })
-    )
-  }
+  return (...args) => getNextFreeFunction().then(
+    func => func(...args).then(result => {
+      promiseFulfilled(func)
+      return result
+    })
+  )
 }

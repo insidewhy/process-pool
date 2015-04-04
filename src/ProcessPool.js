@@ -34,9 +34,6 @@ export default class {
   // TODO: default to number of CPU cores
   constructor({ processLimit = 4 } = {}) {
     this.processLimit = processLimit
-    this.running = []
-    this.subProcesses = []
-    this.queue = []
     this.limiter = functionLimit(func => func(), processLimit)
   }
 
