@@ -33,10 +33,10 @@ describe('process pool', () => {
   }
   )
 
-  it('should pass context to the prepare call', () => {
-    var func = pool.prepare(ctxt => (arg1, arg2) => Promise.resolve(arg1 * arg2 * ctxt), 10)
+  it('should pass context to prepare call', () => {
+    var func = pool.prepare(ctxt => (arg1, arg2) => Promise.resolve(arg1 + arg2 + ctxt), 10)
     return func(2, 3).then(v => {
-      v.should.equal(60)
+      v.should.equal(15)
     })
   })
 })

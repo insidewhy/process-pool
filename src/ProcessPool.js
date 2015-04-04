@@ -42,10 +42,14 @@ export default class {
     context = undefined,
     { processLimit = this.processLimit, replace = false } = {}
   ) {
+    var spArgs = [ func.toString() ]
+    if (context !== undefined)
+      spArgs.push(JSON.stringify(context))
+
     // TODO: add hooks to detect subprocess exit failure
     var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
       path.join(__dirname, 'childProcess'),
-      [ func.toString(), context ]
+      spArgs
     ))
     .map(subProcess => this.limiter(wrapSubprocess.bind(this, subProcess)))
 
