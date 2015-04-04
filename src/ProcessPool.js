@@ -4,6 +4,7 @@ import path from 'path'
 import _ from 'lodash'
 
 import functionPool from './functionPool'
+import functionLimit from './functionLimit'
 
 /**
  * Take sub-process and wrap the messaging to/back into a function that accepts
@@ -36,6 +37,7 @@ export default class {
     this.running = []
     this.subProcesses = []
     this.queue = []
+    this.limiter = functionLimit(func => func(), processLimit)
   }
 
   prepare(func, { processLimit = this.processLimit, replace = false } = {}) {
@@ -44,7 +46,7 @@ export default class {
       path.join(__dirname, 'childProcess'),
       [ func.toString() ]
     ))
-    .map(wrapSubprocess)
+    .map(subProcess => this.limiter(wrapSubprocess.bind(this, subProcess)))
 
     return functionPool(subProcesses)
   }
