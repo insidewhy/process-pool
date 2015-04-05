@@ -4,6 +4,7 @@ import ProcessPool from '../ProcessPool'
 describe('process pool', () => {
   var pool
   beforeEach(() => pool = new ProcessPool)
+  afterEach(() => pool.destroy())
 
   it('should create a sub-process that can accept arguments and return a value', () => {
     var func = pool.prepare(() => (arg1, arg2) => arg1 * arg2 * 10)

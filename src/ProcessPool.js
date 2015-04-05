@@ -34,9 +34,27 @@ export default class {
   // TODO: default to number of CPU cores
   constructor({ processLimit = 4 } = {}) {
     this.processLimit = processLimit
-    this.limiter = functionLimit(func => func(), processLimit)
+    this._reset()
   }
 
+  _reset() {
+    this.limiter = functionLimit(func => func(), this.processLimit)
+    this.subProcesses = []
+  }
+
+  /**
+   * Prepare a function to be run within a process
+   * @param {Function} func This function is immediately executed when the
+   * subprocess starts and should return another function that will handle
+   * each call.
+   * @param {Any} context Optional value to pass to the outter function within
+   * the subprocess, it must be convertable to JSON.
+   * @param {Object|undefined} options processLimit and replace options, usually
+   * this.processLimit functions are spawned for each pooled function, this can be
+   * used to set the limit lower or higher for a given function. Setting it higher
+   * will not allow greater concurrency for this function but will allow the function
+   * to deal with processes being killed more quickly.
+   */
   prepare(
     func,
     context = undefined,
@@ -51,8 +69,19 @@ export default class {
       path.join(__dirname, 'childProcess'),
       spArgs
     ))
-    .map(subProcess => this.limiter(wrapSubprocess.bind(this, subProcess)))
 
-    return functionPool(subProcesses)
+    this.subProcesses.push(...subProcesses)
+
+    return functionPool(subProcesses.map(
+      subProcess => this.limiter(wrapSubprocess.bind(this, subProcess))
+    ))
+  }
+
+  /**
+   * Destroy all pooled subprocesses, do not use them after this.
+   */
+  destroy() {
+    this.subProcesses.forEach(proc => proc.kill())
+    this._reset()
   }
 }
