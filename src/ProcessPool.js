@@ -11,18 +11,19 @@ import functionLimit from './functionLimit'
  * arguments to send over IPC and returns a promise that will resolve to the
  * return value, received via IPC.
  */
-function wrapSubprocess(subProcess) {
+function wrapSubprocess(subProcessPromise) {
   // TODO: use utility to bind promise from event instead of creating the promise manually
-  return (...args) => new Promise((resolve, reject) => {
-    subProcess.once('message', res => {
-      if (res.$$error$$)
-        reject(JSON.parse(res.$$error$$))
-      else
-        resolve(JSON.parse(res))
-    })
-
-    // TODO: schedule so that at most this.processLimit sub processes can run
+  return (...args) => subProcessPromise.then(subProcess => {
     subProcess.send(JSON.stringify(args))
+
+    return new Promise((resolve, reject) => {
+      subProcess.once('message', res => {
+        if (res.$$error$$)
+          reject(JSON.parse(res.$$error$$))
+        else
+          resolve(JSON.parse(res))
+      })
+    })
   })
 }
 
@@ -35,6 +36,7 @@ export default class {
   constructor({ processLimit = 4 } = {}) {
     this.processLimit = processLimit
     this._reset()
+    this.nStarting = 0 // number of processes starting up
   }
 
   _reset() {
@@ -69,17 +71,43 @@ export default class {
       path.join(__dirname, 'childProcess')
     ))
 
-    // TODO: record number of processes starting up
+    var deferred = Promise.pending()
+
+    this.nStarting += subProcesses.length
     subProcesses.forEach(subProc => {
-      // TODO: mark process has started up
       subProc.send(spArgs)
+
+      subProc.once('message', () => {
+        this._subProcessReady()
+        deferred.fulfill(subProc)
+      })
     })
 
     this.subProcesses.push(...subProcesses)
 
     return functionPool(subProcesses.map(
-      subProcess => this.limiter(wrapSubprocess.bind(this, subProcess))
+      subProcess => this.limiter(wrapSubprocess.bind(this, deferred.promise))
     ))
+  }
+
+  _subProcessReady() {
+    --this.nStarting
+    if (this._onStart && this.nStarting === 0) {
+      this._onStart.fulfill()
+      delete this._onStart
+    }
+  }
+
+  /**
+   * Return a promise that resolves when all of the subprocesses have started up.
+   */
+  ready() {
+    if (this.nStarting === 0)
+      return Promise.resolve()
+
+    if (! this._onStart)
+      this._onStart = Promise.pending()
+    return this._onStart.promise
   }
 
   /**
