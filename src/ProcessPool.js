@@ -66,9 +66,14 @@ export default class {
 
     // TODO: add hooks to detect subprocess exit failure
     var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
-      path.join(__dirname, 'childProcess'),
-      spArgs
+      path.join(__dirname, 'childProcess')
     ))
+
+    // TODO: record number of processes starting up
+    subProcesses.forEach(subProc => {
+      // TODO: mark process has started up
+      subProc.send(spArgs)
+    })
 
     this.subProcesses.push(...subProcesses)
 
