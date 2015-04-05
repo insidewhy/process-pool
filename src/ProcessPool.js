@@ -70,23 +70,20 @@ export default class {
     var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
       path.join(__dirname, 'childProcess')
     ))
-
-    var deferred = Promise.pending()
-
-    this.nStarting += subProcesses.length
-    subProcesses.forEach(subProc => {
-      subProc.send(spArgs)
-
-      subProc.once('message', () => {
-        this._subProcessReady()
-        deferred.fulfill(subProc)
-      })
-    })
-
     this.subProcesses.push(...subProcesses)
 
-    return functionPool(subProcesses.map(
-      subProcess => this.limiter(wrapSubprocess.bind(this, deferred.promise))
+    this.nStarting += subProcesses.length
+
+    var spPromises = subProcesses.map(subProc => new Promise(resolve => {
+      subProc.send(spArgs)
+      subProc.once('message', () => {
+        this._subProcessReady()
+        resolve(subProc)
+      })
+    }))
+
+    return functionPool(spPromises.map(
+      spPromise => this.limiter(wrapSubprocess.bind(this, spPromise))
     ))
   }
 
