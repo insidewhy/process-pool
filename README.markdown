@@ -2,7 +2,7 @@
 
 [![Circle CI](https://circleci.com/gh/ohjames/process-pool.png)](https://circleci.com/gh/ohjames/process-pool)
 
-process-pool allows you to maintain a set of sub-processes with a cached state then multiplex them over several CPU cores.
+process-pool allows you to maintain a set of sub-processes with a cached state, creating a process pool that can be used to efficiently delegate work over multiple CPU cores.
 
 ## Using process pool
 
