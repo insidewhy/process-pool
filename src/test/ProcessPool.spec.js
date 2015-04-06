@@ -16,7 +16,10 @@ describe('process pool', () => {
   it(
     'should create a sub-process that can accept arguments and return a value from a Promise',
     () => {
-      var func = pool.prepare(() => (arg1, arg2) => Promise.resolve(arg1 * arg2 * 10))
+      var func = pool.prepare(() => {
+        var Promise = require('bluebird')
+        return (arg1, arg2) => Promise.resolve(arg1 * arg2 * 10)
+      })
       return func(2, 3).then(v => {
         v.should.equal(60)
       })
@@ -35,7 +38,10 @@ describe('process pool', () => {
   )
 
   it('should pass context to prepare call', () => {
-    var func = pool.prepare(ctxt => (arg1, arg2) => Promise.resolve(arg1 + arg2 + ctxt), 10)
+    var func = pool.prepare(ctxt => {
+      var Promise = require('bluebird')
+      return (arg1, arg2) => Promise.resolve(arg1 + arg2 + ctxt)
+    }, 10)
     return func(2, 3).then(v => {
       v.should.equal(15)
     })
