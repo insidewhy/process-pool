@@ -1,6 +1,6 @@
 {
   "name": "process-pool",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Maintain a set of sub-processes with a cached state then multiplex them over several CPU cores.",
   "main": "./lib/ProcessPool",
   "directories": {
@@ -29,7 +29,7 @@
     "source-map": "~0.4.0"
   },
   "devDependencies": {
-    "babel": "~4.6.6",
+    "babel": "~5.0.8",
     "chai": "~1.10.0",
     "grunt": "~0.4.5",
     "grunt": "~0.4.5",
