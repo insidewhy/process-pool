@@ -1,6 +1,6 @@
 # process-pool
 
-[![Circle CI](https://circleci.com/gh/nuisanceofcats/process-pool.png)](https://circleci.com/gh/nuisanceofcats/process-pool)
+[![Circle CI](https://circleci.com/gh/ohjames/process-pool.png)](https://circleci.com/gh/ohjames/process-pool)
 
 *This project is not ready yet, you may start relying on it shortly.*
 
