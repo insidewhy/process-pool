@@ -51,6 +51,41 @@ end 2: 30
 
 The process pool is set to run two processes concurrently, this delays the execution of the third call by a second.
 
+Functions past to `prepare` are *not* closures and do not have access to surrounding scope. The following would fail:
+
+```javascript
+var ProcessPool = require('process-pool')
+var global = 5
+
+var pool = new ProcessPool
+var pooled = pool.prepare(function() {
+  return function(argument) {
+    return argument + global
+  }
+})
+```
+
+`global` is not available within the call to prepare. To pass context to prepare then the two argument version of prepare can be used:
+
+```javascript
+var ProcessPool = require('process-pool')
+var global1 = 2, global2 = 10
+
+var pool = new ProcessPool
+var pooled = pool.prepare(function(context) {
+  // global module requires are not available and must be required.
+  var _ = require('lodash')
+
+  return function(args) {
+    return context.multiply * _.max(args) + context.add
+  }
+}, { multiply: global1, add: global2 })
+
+pool([1, 3]).then(function(value) {
+  console.log("The value 16": value)
+})
+```
+
 ## Running multiple functions with a single pool
 
 Many functions can be wrapped to run in a subprocess by a single pool via calls to `prepare` using the `processLimit` option as shown in the previous example. By default `processLimit` copies of each `prepare`d function are created. Up to `processLimit` * `number of calls to prepare` can be created but only `processLimit` subprocesses will be running code at any given time, the rest will be sleeping. This can be restricted on a per function basis:
@@ -101,3 +136,6 @@ followed by
 twoFunc 3
 ```
 a second later.
+
+## Future work
+* Make sure calls to `require` can not select packages from within `process-pool`'s dependency package directory.
