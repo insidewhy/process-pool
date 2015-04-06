@@ -138,4 +138,4 @@ twoFunc 3
 a second later.
 
 ## Future work
-* Make sure calls to `require` can not select packages from within `process-pool`'s dependency package directory.
+* Pooled functions should be killable.

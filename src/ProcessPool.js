@@ -62,7 +62,7 @@ export default class {
     context = undefined,
     { processLimit = this.processLimit, replace = false } = {}
   ) {
-    var spArgs = [ func.toString() ]
+    var spArgs = [ func.toString(), JSON.stringify(module.parent.paths) ]
     if (context !== undefined)
       spArgs.push(JSON.stringify(context))
 

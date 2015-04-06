@@ -46,4 +46,17 @@ describe('process pool', () => {
       v.should.equal(15)
     })
   })
+
+  it('should require node modules using the parent process module.paths', () => {
+    module.paths.unshift(__dirname + '/node_modules.test')
+
+    var func = pool.prepare(ctxt => {
+      var friender = require('friender')
+      return () => friender.friend || 'unknown'
+    })
+
+    return func().then(v => {
+      v.should.equal('treebear')
+    })
+  })
 })
