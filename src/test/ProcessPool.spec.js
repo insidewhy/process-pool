@@ -48,12 +48,17 @@ describe('process pool', () => {
   })
 
   it('should require node modules using the parent process module.paths', () => {
-    module.paths.unshift(__dirname + '/node_modules.test')
+    module.paths.push(__dirname + '/node_modules.test')
 
     var func = pool.prepare(ctxt => {
       var friender = require('friender')
+      // would throw without module.filename being set via module
+      require('./node_modules.test/friender/index.js')
+
       return () => friender.friend || 'unknown'
     })
+    // TODO: use indirect require to test this instead of previous line
+    // }, null, { module })
 
     return func().then(v => {
       v.should.equal('treebear')
