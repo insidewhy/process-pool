@@ -113,18 +113,11 @@ var Promise = require('bluebird')
 var ProcessPool = require('process-pool')
 var pool = new ProcessPool({ processLimit: 3 })
 
-// Return a promise that delays execution for the given time period.
-function delay(milliseconds) {
-  return new Promise(function(resolve) {
-    setTimeout(resolve, milliseconds)
-  }
-}
-
 var twoFunc = pool.prepare(function() {
   var nCalls = 0
   return function() {
     console.log("twoFunc", ++nCalls)
-    return delay(1000)
+    return Promise.delay(1000)
   }
 }, { processLimit: 2 })
 
@@ -132,7 +125,7 @@ var oneFunc = pool.prepare(function() {
   var nCalls = 0
   return function() {
     console.log("oneFunc", ++nCalls)
-    return delay(1000)
+    return Promise.delay(1000)
   }
 }, { processLimit: 1 })
 

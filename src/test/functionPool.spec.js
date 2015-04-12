@@ -2,8 +2,6 @@ import _ from 'lodash'
 import Promise from 'bluebird'
 import functionPool from '../functionPool'
 
-var delay = time => new Promise(resolve => setTimeout(resolve, time))
-
 describe('function pool', () => {
   it('should schedule a single function call', () => {
     var pool = functionPool([ arg => Promise.resolve(arg + 5) ])
@@ -19,7 +17,7 @@ describe('function pool', () => {
     var pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
     var promises = _.range(0, 4).map(() => pool())
 
-    return delay(10).then(() => {
+    return Promise.delay(10).then(() => {
       nCalls.should.equal(2)
       defs[1].fulfill()
       return promises[1]
