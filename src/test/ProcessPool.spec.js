@@ -14,6 +14,14 @@ describe('process pool', () => {
   })
 
   it(
+    'ready() call should return promise that resolves when all subprocesses are ready',
+    () => {
+      var func = pool.prepare(() => () => {})
+      return pool.ready()
+    }
+  )
+
+  it(
     'should create a sub-process that can accept arguments and return a value from a Promise',
     () => {
       var func = pool.prepare(() => {
