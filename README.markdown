@@ -86,6 +86,24 @@ pool([1, 3]).then(function(value) {
 })
 ```
 
+## Requiring modules in a sub-process
+
+By the the module environment is inherited from `module.parent` which is the module that included `process-pool`, in many cases this may not be the environment you wish the sup-process to run in. In order to use the current environment the `module` option can be used. In most cases the `module` global variable provided by node should be passed which will case `require` to resolve modules according to module of the current source file.
+
+```javascript
+// In this case the 'pooler' module includes 'process-pool', without using
+// the `module` argument then require would resolve paths according to the pooler
+// module rather than this one.
+var pooler = require('pooler')
+
+var pooled = pooler.procPool.prepare(function() {
+  var compiler = require('compiler')
+  return function(data) {
+    return compiler.compile(data)
+  }
+}, null, { module: module })
+```
+
 ## Running multiple functions with a single pool
 
 Many functions can be wrapped to run in a subprocess by a single pool via calls to `prepare` using the `processLimit` option as shown in the previous example. By default `processLimit` copies of each `prepare`d function are created. Up to `processLimit` * `number of calls to prepare` can be created but only `processLimit` subprocesses will be running code at any given time, the rest will be sleeping. This can be restricted on a per function basis:
@@ -129,11 +147,11 @@ This would print:
 ```
 twoFunc 1
 twoFunc 2
-oneFunc 1
+oneFunc 3
 ```
 followed by
 ```
-twoFunc 3
+twoFunc 4
 ```
 a second later.
 
