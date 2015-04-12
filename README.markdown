@@ -140,6 +140,7 @@ twoFunc()
 twoFunc()
 twoFunc()
 oneFunc()
+oneFunc()
 ```
 
 This would print:
@@ -147,11 +148,12 @@ This would print:
 ```
 twoFunc 1
 twoFunc 2
-oneFunc 3
+oneFunc 1
 ```
 followed by
 ```
-twoFunc 4
+twoFunc 3
+oneFunc 2
 ```
 a second later.
 
