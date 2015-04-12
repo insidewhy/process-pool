@@ -31,7 +31,7 @@ describe('process pool', () => {
   it('should catch a thrown exception in a sub-process and fail the promise', done => {
     var func = pool.prepare(() => (arg1, arg2) => { throw Error('ohno') })
     return func(2, 3).catch(err => {
-      err.should.equal('ohno')
+      err.message.should.equal('ohno')
       done()
     })
   }

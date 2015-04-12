@@ -19,7 +19,7 @@ function wrapSubprocess(subProcessPromise) {
     return new Promise((resolve, reject) => {
       subProcess.once('message', res => {
         if (res.$$error$$)
-          reject(JSON.parse(res.$$error$$))
+          reject(Error(JSON.parse(res.$$error$$)))
         else
           resolve(JSON.parse(res))
       })
@@ -65,14 +65,13 @@ export default class {
     if (! _module)
       _module = module.parent
 
-    var spArgs = [
-      func.toString(),
-      JSON.stringify(_module.paths),
-      JSON.stringify(_module.filename)
-    ]
-
-    if (context !== undefined)
-      spArgs.push(JSON.stringify(context))
+    var spArgs = {
+      $$prepare$$: func.toString(),
+      modulePaths: _module.paths,
+      moduleFilename: _module.filename
+    }
+    if (context)
+      spArgs.context = context
 
     // TODO: add hooks to detect subprocess exit failure
     var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
@@ -83,7 +82,7 @@ export default class {
     this.nStarting += subProcesses.length
 
     var spPromises = subProcesses.map(subProc => new Promise(resolve => {
-      subProc.send(spArgs)
+      subProc.send(JSON.stringify(spArgs))
       subProc.once('message', () => {
         this._subProcessReady()
         resolve(subProc)
