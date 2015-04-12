@@ -13,8 +13,8 @@ var ProcessPool = require('process-pool')
 // Limit number of running processes to two.
 var pool = new ProcessPool({ processLimit: 2 })
 
-var begin = moment()
-function time() { return moment().diff(start, 'seconds') }
+function time() { return moment().diff(time.start, 'seconds') }
+time.start = moment()
 
 var func = pool.prepare(function() {
   // code here is run in the subprocess before it is first called, this allows you
@@ -23,8 +23,8 @@ var func = pool.prepare(function() {
   // this is the function run in the sub-process whenever the wrapping function
   // is called from a sub-process.
   return function(value) {
-    // the promise is used to keep the process active for a second, usually you
-    // would not use promises for this purpose in a process pool.
+    // the promise is used to keep the process active for a second, usually
+    // promises would not be used for this purpose in a process pool.
     return new Promise(function(resolve) {
       console.log('begin %s: %s', time(), returnValue)
       setTimeout(function() { resolve(p * 10) }, 1000)
@@ -65,7 +65,7 @@ var pooled = pool.prepare(function() {
 })
 ```
 
-`global` is not available within the call to prepare. To pass context to prepare then the two argument version of prepare can be used:
+`global` is not available within the call to prepare. To pass context to prepare the two argument version of prepare can be used:
 
 ```javascript
 var ProcessPool = require('process-pool')
@@ -92,8 +92,8 @@ By the the module path data is inherited from `module.parent` which is the modul
 
 ```javascript
 // In this case the 'pooler' module includes 'process-pool', without using
-// the `module` argument then require would resolve paths according to the pooler
-// module rather than this one.
+// the `module` argument then require would resolve paths according to the
+// 'pooler' module rather than this one.
 var pooler = require('pooler')
 
 var pooled = pooler.procPool.prepare(function() {
