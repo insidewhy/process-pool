@@ -88,7 +88,7 @@ pool([1, 3]).then(function(value) {
 
 ## Requiring modules in a sub-process
 
-By the the module environment is inherited from `module.parent` which is the module that included `process-pool`, in many cases this may not be the environment you wish the sup-process to run in. In order to use the current environment the `module` option can be used. In most cases the `module` global variable provided by node should be passed which will case `require` to resolve modules according to module of the current source file.
+By the the module path data is inherited from `module.parent` which is the module that included `process-pool`, in many cases this may not be the environment the sup-process should use. In order to use the current module path data the `module` option can be used. In most cases the `module` global variable provided by node should be passed which will case `require` to resolve modules according to module of the current source file.
 
 ```javascript
 // In this case the 'pooler' module includes 'process-pool', without using
