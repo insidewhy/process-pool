@@ -14,7 +14,7 @@ import functionLimit from './functionLimit'
 function wrapSubprocess(subProcessPromise) {
   // TODO: use utility to bind promise from event instead of creating the promise manually
   return (...args) => subProcessPromise.then(subProcess => {
-    subProcess.send(JSON.stringify(args))
+    subProcess.send(args)
 
     return new Promise((resolve, reject) => {
       subProcess.once('message', res => {
@@ -24,7 +24,7 @@ function wrapSubprocess(subProcessPromise) {
           reject(err)
         }
         else {
-          resolve(JSON.parse(res))
+          resolve(res)
         }
       })
     })
@@ -86,7 +86,7 @@ export default class {
     this.nStarting += subProcesses.length
 
     var spPromises = subProcesses.map(subProc => new Promise(resolve => {
-      subProc.send(JSON.stringify(spArgs))
+      subProc.send(spArgs)
       subProc.once('message', () => {
         this._subProcessReady()
         resolve(subProc)
