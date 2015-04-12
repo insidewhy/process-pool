@@ -18,10 +18,14 @@ function wrapSubprocess(subProcessPromise) {
 
     return new Promise((resolve, reject) => {
       subProcess.once('message', res => {
-        if (res.$$error$$)
-          reject(Error(JSON.parse(res.$$error$$)))
-        else
+        if (res.$$error$$) {
+          var err = Error(res.$$error$$)
+          err.stack = res.stack
+          reject(err)
+        }
+        else {
           resolve(JSON.parse(res))
+        }
       })
     })
   })
