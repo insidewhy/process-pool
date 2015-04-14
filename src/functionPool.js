@@ -13,6 +13,7 @@ export default function(funcs) {
 
   var getNextFreeFunction = () => {
     if (free.length) {
+      // TODO: non-resolving promisifying version
       return Promise.resolve(free.shift())
     }
     else {

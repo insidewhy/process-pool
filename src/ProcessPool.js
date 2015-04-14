@@ -74,9 +74,11 @@ export default class {
 
     var ret = func.pool = functionPool(spPromises.map(
       (spPromise, idx) => {
-        var ret = this.limiter(wrapSubprocess.bind(this, spPromise))
-        ret.subProcess = func.subProcesses[idx]
-        return ret
+        var wrapped = wrapSubprocess(spPromise)
+        return (...args) => {
+          // TODO: attach subprocess
+          return this.limiter(wrapped.bind(this, ...args))
+        }
       }
     ))
     ret.kill = this._kill.bind(this, func)
