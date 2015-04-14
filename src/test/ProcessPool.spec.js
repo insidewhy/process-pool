@@ -9,6 +9,7 @@ describe('process pool', () => {
   it('should create a sub-process that can accept arguments and return a value', () => {
     var func = pool.prepare(() => (arg1, arg2) => arg1 * arg2 * 10)
     return func(2, 3).then(v => {
+      func.running.length.should.equal(0)
       v.should.equal(60)
     })
   })

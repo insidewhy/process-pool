@@ -1,4 +1,5 @@
 import Promise from 'bluebird'
+import _ from 'lodash'
 
 /**
  * This schedules work out to a number of promise returning functions, after
@@ -7,6 +8,7 @@ import Promise from 'bluebird'
  */
 export default function(funcs) {
   var free = funcs.slice(0)
+  var running = []
   var callQueue = []
 
   var getNextFreeFunction = () => {
@@ -27,10 +29,16 @@ export default function(funcs) {
       free.push(func)
   }
 
-  return (...args) => getNextFreeFunction().then(
-    func => func(...args).then(result => {
-      promiseFulfilled(func)
-      return result
-    })
+  var ret = (...args) => getNextFreeFunction().then(
+    func => {
+      running.push(func)
+      return func(...args).then(result => {
+        running.splice(running.indexOf(func), 1)
+        promiseFulfilled(func)
+        return result
+      })
+    }
   )
+  ret.running = running
+  return ret
 }
