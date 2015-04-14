@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
 import functionLimit from '../functionLimit'
+import invert from '../invert'
 
 var delay = time => new Promise(resolve => setTimeout(resolve, time))
 
@@ -33,9 +34,9 @@ describe('function limit', () => {
     return delay(10).then(() => {
       nCalls.should.equal(2)
       defs[0].reject()
-      return promises[0]
+      return invert(promises[0])
     })
-    .catch(() => {
+    .then(() => {
       // this would be 2 if the rejection was not caught and another function scheduled
       nCalls.should.equal(3)
       defs[1].fulfill()

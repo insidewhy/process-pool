@@ -1,9 +1,10 @@
 import Promise from 'bluebird'
 import ProcessPool from '../ProcessPool'
+import invert from '../invert'
 
 describe('process pool', () => {
   var pool
-  beforeEach(() => pool = new ProcessPool)
+  beforeEach(() => pool = new ProcessPool({ processLimit: 2 }))
   afterEach(() => pool.destroy())
 
   it('should create a sub-process that can accept arguments and return a value', () => {
@@ -35,16 +36,13 @@ describe('process pool', () => {
     }
   )
 
-  // TODO: chai-as-promised doesn't play nice with bluebird, try/write
-  //       alternative instead of using done parameter.
   it('should catch a thrown exception in a sub-process and fail the promise', done => {
     var func = pool.prepare(() => (arg1, arg2) => { throw Error('ohno') })
-    return func(2, 3).catch(err => {
+    return invert(func(2, 3)).then(err => {
       err.message.should.equal('ohno')
       done()
     })
-  }
-  )
+  })
 
   it('should pass context to prepare call', () => {
     var func = pool.prepare(ctxt => {
@@ -71,6 +69,25 @@ describe('process pool', () => {
 
     return func().then(v => {
       v.should.equal('treebear')
+    })
+  })
+
+  it('should kill active process when requested', () => {
+    var func = () => {
+      var Promise = require('bluebird')
+      return arg1 => Promise.delay(100).then(() => arg1 * 10)
+    }
+    var subprocFunc = pool.prepare(func)
+
+    var callPromise = subprocFunc(7)
+
+    return Promise.delay(10).then(() => {
+      subprocFunc.kill()
+
+      return invert(callPromise)
+    })
+    .then(err => {
+      console.log("process terminated", err)
     })
   })
 })

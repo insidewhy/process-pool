@@ -40,12 +40,12 @@ export default class {
   constructor({ processLimit = 4 } = {}) {
     this.processLimit = processLimit
     this._reset()
-    this.nStarting = 0 // number of processes starting up
   }
 
   _reset() {
     this.limiter = functionLimit(func => func(), this.processLimit)
-    this.subProcesses = []
+    this.preparedFuncs = []
+    this.nStarting = 0 // number of processes starting up
   }
 
   /**
@@ -64,38 +64,61 @@ export default class {
   prepare(
     func,
     context = undefined,
-    { processLimit = this.processLimit, replace = false, module: _module } = {}
-  ) {
-    if (! _module)
-      _module = module.parent
+    { processLimit = this.processLimit, module: _module } = {}
+  )
+  {
+    func.context = context
+    func.module = _module || module.parent
+    func.subProcesses = []
+    var spPromises = this._spawnSubprocesses(processLimit, func)
+
+    var ret = func.pool = functionPool(spPromises.map(
+      (spPromise, idx) => {
+        var ret = this.limiter(wrapSubprocess.bind(this, spPromise))
+        ret.subProcess = func.subProcesses[idx]
+        return ret
+      }
+    ))
+    ret.kill = this._kill.bind(this, func)
+    return ret
+  }
+
+  _spawnSubprocesses(count, func) {
+    var { module, context } = func
 
     var spArgs = {
       $$prepare$$: func.toString(),
-      modulePaths: _module.paths,
-      moduleFilename: _module.filename
+      modulePaths: module.paths,
+      moduleFilename: module.filename
     }
     if (context)
       spArgs.context = context
 
     // TODO: add hooks to detect subprocess exit failure
-    var subProcesses = _.range(0, processLimit).map(() => child_process.fork(
+    var subProcesses = _.range(0, count).map(() => child_process.fork(
       path.join(__dirname, 'childProcess')
     ))
-    this.subProcesses.push(...subProcesses)
+
+    // TODO: append to func.subProcesses instead
+    func.subProcesses.push(...subProcesses)
 
     this.nStarting += subProcesses.length
 
-    var spPromises = subProcesses.map(subProc => new Promise(resolve => {
+    return subProcesses.map(subProc => new Promise(resolve => {
       subProc.send(spArgs)
       subProc.once('message', () => {
         this._subProcessReady()
         resolve(subProc)
       })
     }))
+  }
 
-    return functionPool(spPromises.map(
-      spPromise => this.limiter(wrapSubprocess.bind(this, spPromise))
-    ))
+  _kill(func) {
+    var { pool } = func
+    pool.running.forEach(runningFunc => {
+      console.log("running", runningFunc, runningFunc.subProcess)
+      // TODO: kill runningFunc.subProcess
+    })
   }
 
   _subProcessReady() {
@@ -122,7 +145,10 @@ export default class {
    * Destroy all pooled subprocesses, do not use them after this.
    */
   destroy() {
-    this.subProcesses.forEach(proc => proc.kill())
+    // TODO: get from this.preparedFuncs.[subProcesses] instead
+    this.preparedFuncs.forEach(func => {
+      func.subProcesses.forEach(proc => proc.kill())
+    })
     this._reset()
   }
 }

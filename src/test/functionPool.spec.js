@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import Promise from 'bluebird'
 import functionPool from '../functionPool'
+import invert from '../invert'
 
 describe('function pool', () => {
   it('should schedule a single function call', () => {
@@ -44,14 +45,14 @@ describe('function pool', () => {
     return Promise.delay(10).then(() => {
       nCalls.should.equal(2)
       defs[1].reject()
-      return promises[1]
+      return invert(promises[1])
     })
-    .catch(() => {
+    .then(() => {
       nCalls.should.equal(3)
       defs[0].reject()
-      return promises[0]
+      return invert(promises[0])
     })
-    .catch(() => {
+    .then(() => {
       nCalls.should.equal(4)
       defs[2].fulfill()
       defs[3].fulfill()
