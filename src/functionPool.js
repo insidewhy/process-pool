@@ -39,13 +39,21 @@ export default function(funcs) {
     addToFreeQueue(replacement)
   }
 
+  var callComplete = func => {
+    running.splice(running.indexOf(func), 1)
+    addToFreeQueue(func)
+  }
+
   var ret = (...args) => getNextFreeFunction().then(
     func => {
       running.push(func)
       return func(...args).then(result => {
-        running.splice(running.indexOf(func), 1)
-        addToFreeQueue(func)
+        callComplete(func)
         return result
+      })
+      .catch(err => {
+        callComplete(func)
+        throw err
       })
     }
   )

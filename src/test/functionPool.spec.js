@@ -35,6 +35,30 @@ describe('function pool', () => {
     })
   })
 
+  it('should schedule four calls over two functions accounting for rejections', () => {
+    var defs = _.range(0, 4).map(Promise.defer)
+    var nCalls = 0
+    var pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
+    var promises = _.range(0, 4).map(() => pool())
+
+    return Promise.delay(10).then(() => {
+      nCalls.should.equal(2)
+      defs[1].reject()
+      return promises[1]
+    })
+    .catch(() => {
+      nCalls.should.equal(3)
+      defs[0].reject()
+      return promises[0]
+    })
+    .catch(() => {
+      nCalls.should.equal(4)
+      defs[2].fulfill()
+      defs[3].fulfill()
+      return Promise.all(promises.slice(2))
+    })
+  })
+
   it('should replace a free function with a replacement', () => {
     var pooled = _.range(0, 2).map(idx => () => Promise.resolve((idx + 1) * 10))
     var pool = functionPool(pooled)

@@ -21,15 +21,22 @@ export default function(func, limit) {
     }
   }
 
+  var callComplete = () => {
+    if (callQueue.length)
+      callQueue.shift().fulfill()
+    else
+      --activeCalls
+  }
+
   return (...args) => {
     return getFreeFunction().then(() => {
       return Promise.resolve(func(...args)).then(result => {
-        if (callQueue.length)
-          callQueue.shift().fulfill()
-        else
-          --activeCalls
-
+        callComplete()
         return result
+      })
+      .catch(err => {
+        callComplete()
+        throw err
       })
     })
   }
