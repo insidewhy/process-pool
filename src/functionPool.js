@@ -22,11 +22,21 @@ export default function(funcs) {
     }
   }
 
-  var promiseFulfilled = func => {
+  var addToFreeQueue = func => {
     if (callQueue.length)
       callQueue.shift().fulfill(func)
     else
       free.push(func)
+  }
+
+  var replace = (func, replacement) => {
+    var idx = running.indexOf(func)
+    if (idx !== -1)
+      running.splice(idx, 1)
+    else
+      free.splice(free.indexOf(func), 1)
+
+    addToFreeQueue(replacement)
   }
 
   var ret = (...args) => getNextFreeFunction().then(
@@ -34,11 +44,12 @@ export default function(funcs) {
       running.push(func)
       return func(...args).then(result => {
         running.splice(running.indexOf(func), 1)
-        promiseFulfilled(func)
+        addToFreeQueue(func)
         return result
       })
     }
   )
   ret.running = running
+  ret.replace = replace
   return ret
 }

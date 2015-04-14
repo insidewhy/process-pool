@@ -34,4 +34,37 @@ describe('function pool', () => {
       return Promise.all(promises.slice(2))
     })
   })
+
+  it('should replace a free function with a replacement', () => {
+    var pooled = _.range(0, 2).map(idx => () => Promise.resolve((idx + 1) * 10))
+    var pool = functionPool(pooled)
+
+    pool.replace(pooled[1], () => Promise.resolve(5))
+
+    return Promise.all([ pool(), pool(), pool() ]).then(vals => {
+      vals.should.eql([10, 5, 10])
+    })
+  })
+
+  it('should replace a running function with a replacement', () => {
+    var pooled = _.range(0, 2).map(idx => () => Promise.delay((idx + 1) * 10, 100))
+    var pool = functionPool(pooled)
+
+    var calls = [ pool(), pool(), pool(), pool() ]
+
+    return Promise.delay(10).then(() => {
+      pool.replace(pooled[1], () => Promise.resolve(5))
+      return Promise.delay(10)
+    })
+    .then(() => {
+      calls[0].isFulfilled().should.be.false
+      calls[1].isFulfilled().should.be.false
+      calls[2].isFulfilled().should.be.true
+      calls[3].isFulfilled().should.be.true
+      return Promise.all(calls)
+    })
+    .then(vals => {
+      vals.should.eql([10, 20, 5, 5])
+    })
+  })
 })
