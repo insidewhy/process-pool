@@ -53,11 +53,15 @@ export default function(funcs) {
         return result
       })
       .catch(err => {
-        callComplete(func)
+        // TODO: don't do this here
+        if (! err || ! err.message || err.message !== 'killed')
+          callComplete(func)
         throw err
       })
     }
   )
+
+  ret.free = free
   ret.running = running
   ret.replace = replace
   return ret

@@ -72,22 +72,58 @@ describe('process pool', () => {
     })
   })
 
-  it('should kill active process when requested', () => {
-    var func = () => {
+  it('should schedule three calls across two processes', () => {
+    var subprocFunc = pool.prepare(() => {
       var Promise = require('bluebird')
-      return arg1 => Promise.delay(100).then(() => arg1 * 10)
-    }
-    var subprocFunc = pool.prepare(func)
+      return () => Promise.delay(Date.now(), 100)
+    })
 
-    var callPromise = subprocFunc(7)
+    return pool.ready().then(() => {
+      return Promise.all([ subprocFunc(), subprocFunc(), subprocFunc() ])
+    })
+    .then(vals => {
+      vals.length.should.equal(3)
+      Math.abs(vals[0] - vals[1]).should.be.below(50)
+      var longDiff = (vals[2] - vals[1])
+      longDiff .should.be.above(99)
+    })
+  })
 
-    return Promise.delay(10).then(() => {
-      subprocFunc.kill()
+  it('should kill active process when requested', () => {
+    var subprocFunc = pool.prepare(() => {
+      var Promise = require('bluebird')
+      return () => Promise.delay(Date.now(), 100)
+    })
+    var func = pool.preparedFuncs[0]
 
-      return invert(callPromise)
+    return pool.ready().then(() => {
+      func.pool.free.length.should.equal(2)
+      func.pool.running.length.should.equal(0)
+
+      var callPromise = subprocFunc()
+
+      return Promise.delay(10).then(() => {
+        func.pool.free.length.should.equal(1)
+        func.pool.running.length.should.equal(1)
+        subprocFunc.kill()
+        return invert(callPromise)
+      })
     })
     .then(err => {
-      console.log("process terminated", err)
+      err.message.should.equal('killed')
+      func.subProcesses.length.should.equal(2)
+      func.pool.free.length.should.equal(2)
+      func.pool.running.length.should.equal(0)
+
+      // wait for replace function to ready...
+      return pool.ready()
+    })
+    .then(() => {
+      return Promise.all([ subprocFunc(), subprocFunc() ])
+    })
+    .then(vals => {
+      vals.length.should.equal(2)
+      Math.abs(vals[0] - vals[1]).should.be.below(50)
     })
   })
 })
