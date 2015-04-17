@@ -116,7 +116,7 @@ export default class {
 
       var wrapped = wrapSubprocess(spPromise)
       var ret = (...args) => this.limiter(wrapped.bind(this, ...args))
-      ret.subProcess = funcData.subProcesses[idx]
+      ret.subProcess = subProcesses[idx]
       return ret
     })
   }
