@@ -41,8 +41,12 @@ export default function(funcs) {
   }
 
   var callComplete = func => {
-    running.splice(running.indexOf(func), 1)
-    addToFreeQueue(func)
+    var runningIdx = running.indexOf(func)
+    // it could have been removed by a call to `replace`
+    if (runningIdx !== -1) {
+      running.splice(runningIdx, 1)
+      addToFreeQueue(func)
+    }
   }
 
   var ret = (...args) => getNextFreeFunction().then(
@@ -53,9 +57,7 @@ export default function(funcs) {
         return result
       })
       .catch(err => {
-        // TODO: don't do this here
-        if (! err || ! err.message || err.message !== 'killed')
-          callComplete(func)
+        callComplete(func)
         throw err
       })
     }

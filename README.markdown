@@ -151,4 +151,4 @@ oneFunc 2
 a second later.
 
 ## Future work
-* Pooled functions should be killable.
+* Killing a pooled function should drain the wait queue.
