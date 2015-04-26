@@ -81,7 +81,7 @@ var pooled = pool.prepare(function(context) {
   }
 }, { multiply: global1, add: global2 })
 
-pool([1, 3]).then(function(value) {
+pooled([1, 3]).then(function(value) {
   console.log("The value 16": value)
 })
 ```
