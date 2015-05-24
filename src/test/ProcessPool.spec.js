@@ -105,7 +105,8 @@ describe('process pool', () => {
       return Promise.delay(10).then(() => {
         func.pool.free.length.should.equal(1)
         func.pool.running.length.should.equal(1)
-        subprocFunc.kill()
+        var killed = subprocFunc.kill()
+        killed.length.should.equal(1)
         return invert(callPromise)
       })
     })

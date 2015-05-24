@@ -137,6 +137,8 @@ export default class {
         pool.replace(func, newFuncs[idx])
       })
     }
+
+    return killed.map(funcData => funcData.subProcess.pid)
   }
 
   _subProcessReady() {
