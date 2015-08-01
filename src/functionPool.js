@@ -13,19 +13,25 @@ export default function(funcs) {
 
   var getNextFreeFunction = () => {
     if (free.length) {
-      // TODO: non-resolving promisifying version
-      return Promise.resolve(free.shift())
+      var func = free.shift()
+      running.push(func)
+      return Promise.resolve(func)
     }
     else {
-      var deferred = Promise.pending()
-      callQueue.push(deferred)
-      return deferred.promise
+      return new Promise(resolve => {
+        callQueue.push(func => {
+          // running.push must be here so it can happen
+          // in the same tick as it's removal from `free`
+          running.push(func)
+          resolve(func)
+        })
+      })
     }
   }
 
   var addToFreeQueue = func => {
     if (callQueue.length)
-      callQueue.shift().fulfill(func)
+      callQueue.shift()(func)
     else
       free.push(func)
   }
@@ -51,7 +57,6 @@ export default function(funcs) {
 
   var ret = (...args) => getNextFreeFunction().then(
     func => {
-      running.push(func)
       return func(...args).then(result => {
         callComplete(func)
         return result
