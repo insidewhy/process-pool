@@ -1,75 +1,82 @@
 import Promise from 'bluebird'
 import _ from 'lodash'
 
-/**
- * This schedules work out to a number of promise returning functions, after
- * each function has been called it will remain unavailable for future calls
- * until the promise returned by the outstanding call is resolved or rejected.
- */
-export default function(funcs) {
-  var free = funcs.slice(0)
-  var running = []
-  var callQueue = []
+class PooledFunction {
+  constructor(funcs) {
+    this.free = funcs.slice(0)
+    this.running = []
+    this.callQueue = []
+  }
 
-  var getNextFreeFunction = () => {
-    if (free.length) {
-      var func = free.shift()
-      running.push(func)
+  getNextFreeFunction() {
+    if (this.free.length) {
+      var func = this.free.shift()
+      this.running.push(func)
       return Promise.resolve(func)
     }
     else {
       return new Promise(resolve => {
-        callQueue.push(func => {
+        this.callQueue.push(func => {
           // running.push must be here so it can happen
           // in the same tick as it's removal from `free`
-          running.push(func)
+          this.running.push(func)
           resolve(func)
         })
       })
     }
   }
 
-  var addToFreeQueue = func => {
-    if (callQueue.length)
-      callQueue.shift()(func)
+  addToFreeQueue(func) {
+    if (this.callQueue.length)
+      this.callQueue.shift()(func)
     else
-      free.push(func)
+      this.free.push(func)
   }
 
-  var replace = (func, replacement) => {
-    var idx = running.indexOf(func)
+  replace(func, replacement) {
+    var idx = this.running.indexOf(func)
     if (idx !== -1)
-      running.splice(idx, 1)
+      this.running.splice(idx, 1)
     else
-      free.splice(free.indexOf(func), 1)
+      this.free.splice(this.free.indexOf(func), 1)
 
-    addToFreeQueue(replacement)
+    this.addToFreeQueue(replacement)
   }
 
-  var callComplete = func => {
-    var runningIdx = running.indexOf(func)
+  callComplete(func) {
+    var runningIdx = this.running.indexOf(func)
     // it could have been removed by a call to `replace`
     if (runningIdx !== -1) {
-      running.splice(runningIdx, 1)
-      addToFreeQueue(func)
+      this.running.splice(runningIdx, 1)
+      this.addToFreeQueue(func)
     }
   }
 
-  var ret = (...args) => getNextFreeFunction().then(
-    func => {
+  schedule(...args) {
+    return this.getNextFreeFunction().then(func => {
       return func(...args).then(result => {
-        callComplete(func)
+        this.callComplete(func)
         return result
       })
       .catch(err => {
-        callComplete(func)
+        this.callComplete(func)
         throw err
       })
-    }
-  )
+    })
+  }
+}
 
-  ret.free = free
-  ret.running = running
-  ret.replace = replace
+/**
+ * This schedules work out to a number of promise returning functions, after
+ * each function has been called it will remain unavailable for future calls
+ * until the promise returned by the outstanding call is resolved or rejected.
+ */
+export default function(funcs) {
+  var pooled = new PooledFunction(funcs)
+
+  var ret = pooled.schedule.bind(pooled)
+  ret.replace = pooled.replace.bind(pooled)
+  ret.free = pooled.free
+  ret.running = pooled.running
   return ret
 }
