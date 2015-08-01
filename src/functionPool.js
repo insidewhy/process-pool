@@ -26,11 +26,42 @@ class PooledFunction {
     }
   }
 
-  addToFreeQueue(func) {
-    if (this.callQueue.length)
+  _callPriorityFunctions(func) {
+    var { priorityWork } = func
+    var { resolve, args } = priorityWork.shift()
+
+    // this is implemented recursively so that it can deal with extra priority
+    // work that is scheduled while it processes existing priority work
+    func(...args).then(result => {
+      if (priorityWork.length === 0) {
+        delete func.priorityWork
+        this.running.splice(this.running.indexOf(func), 1)
+        this._addToFreeQueue(func)
+        resolve(result)
+      }
+      else {
+        resolve(result)
+        this._callPriorityFunctions(func)
+      }
+    })
+  }
+
+  /**
+   * Mark a function call as complete, it will be assigned to new work if any
+   * is available otherwise it will return to the free queue.
+   * @pre function must not be in running queue.
+   */
+  _addToFreeQueue(func) {
+    if (func.priorityWork) {
+      this.running.push(func)
+      this._callPriorityFunctions(func)
+    }
+    else if (this.callQueue.length) {
       this.callQueue.shift()(func)
-    else
+    }
+    else {
       this.free.push(func)
+    }
   }
 
   replace(func, replacement) {
@@ -40,28 +71,62 @@ class PooledFunction {
     else
       this.free.splice(this.free.indexOf(func), 1)
 
-    this.addToFreeQueue(replacement)
+    this._addToFreeQueue(replacement)
   }
 
-  callComplete(func) {
+  _callComplete(func) {
     var runningIdx = this.running.indexOf(func)
     // it could have been removed by a call to `replace`
     if (runningIdx !== -1) {
       this.running.splice(runningIdx, 1)
-      this.addToFreeQueue(func)
+      this._addToFreeQueue(func)
     }
   }
 
   schedule(...args) {
     return this.getNextFreeFunction().then(func => {
       return func(...args).then(result => {
-        this.callComplete(func)
+        this._callComplete(func)
         return result
       })
       .catch(err => {
-        this.callComplete(func)
+        this._callComplete(func)
         throw err
       })
+    })
+  }
+
+  all(...args) {
+    var { running } = this
+    var free = this.free.slice()
+    this.free.length = 0
+
+    var promises = free.map(func => func(...args))
+
+    var runningPromises = running.map(func => {
+      return new Promise(resolve => {
+        var { priorityWork } = func
+        var data = { resolve, args }
+        if (priorityWork)
+          priorityWork.push(data)
+        else
+          func.priorityWork = [ data ]
+      })
+    })
+
+    if (runningPromises.length)
+      promises.push(...runningPromises)
+
+    running.push(...free)
+
+    return Promise.all(promises)
+    .then(results => {
+      // or maybe it should be running...
+      free.forEach(func => {
+        running.splice(running.indexOf(func), 1)
+        this._addToFreeQueue(func)
+      })
+      return results
     })
   }
 }
@@ -76,6 +141,7 @@ export default function(funcs) {
 
   var ret = pooled.schedule.bind(pooled)
   ret.replace = pooled.replace.bind(pooled)
+  ret.all = pooled.all.bind(pooled)
   ret.free = pooled.free
   ret.running = pooled.running
   return ret

@@ -92,4 +92,54 @@ describe('function pool', () => {
       vals.should.eql([10, 20, 5, 5])
     })
   })
+
+  var setDelayFunction = (data, instruction) => {
+    var { set, delay } = instruction
+    if (set) {
+      var oldVal = data.field
+      data.field = set
+      return Promise.resolve(data.idx + oldVal)
+    }
+    else if (delay)
+      return Promise.delay(data.idx + data.field, delay)
+  }
+
+  it('should call all free functions via `all`', () => {
+    var pooled = _.range(0, 2).map(idx => {
+      return setDelayFunction.bind(null, { idx, field: 0 })
+    })
+    var pool = functionPool(pooled)
+
+    return Promise.all([
+      pool.all({ set: 10 }),
+      pool({ delay: 100 }),
+      pool({ delay: 100 }),
+    ])
+    .then(results => {
+      results.should.eql([ [ 0, 1 ], 10, 11 ])
+      pool.running.should.have.length(0)
+      pool.free.should.have.length(2)
+    })
+  })
+
+  it('should call one free and one running function (when ready) via `all`', () => {
+    var pooled = _.range(0, 2).map(idx => {
+      return setDelayFunction.bind(null, { idx, field: 0 })
+    })
+    var pool = functionPool(pooled)
+
+    return Promise.all([
+      pool({ delay: 50 }),
+      pool.all({ set: 10 }),
+      pool({ delay: 100 }),
+      pool({ delay: 100 }),
+      pool({ delay: 100 }),
+      pool({ delay: 100 }),
+    ])
+    .then(results => {
+      results.should.eql([ 0, [1, 0], 10, 11, 10, 11 ])
+      pool.running.should.have.length(0)
+      pool.free.should.have.length(2)
+    })
+  })
 })
