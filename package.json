@@ -7,7 +7,7 @@
     "lib": "./lib"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "sigh"
   },
   "repository": {
     "type": "git",
@@ -31,13 +31,12 @@
   "devDependencies": {
     "babel": "~5.0.8",
     "chai": "~1.10.0",
-    "grunt": "~0.4.5",
-    "grunt": "~0.4.5",
-    "grunt-contrib-clean": "~0.6.0",
-    "grunt-contrib-watch": "~0.6.1",
-    "grunt-mocha-test": "~0.12.7",
-    "mocha": "~2.2.1",
     "jit-grunt": "~0.9.1",
+    "mocha": "~2.2.1",
+    "sigh": "^0.12.20",
+    "sigh-babel": "^0.11.5",
+    "sigh-cli": "^0.2.8",
+    "sigh-mocha": "^0.1.2",
     "source-map-support": "~0.2.9"
   }
 }
