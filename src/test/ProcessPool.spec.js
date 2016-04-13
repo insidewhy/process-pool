@@ -1,6 +1,7 @@
 import Promise from 'bluebird'
 import ProcessPool from '../ProcessPool'
 import invert from '../invert'
+import {ChildProcess} from "child_process";
 
 describe('process pool', () => {
   var pool
@@ -125,6 +126,19 @@ describe('process pool', () => {
     .then(vals => {
       vals.length.should.equal(2)
       Math.abs(vals[0] - vals[1]).should.be.below(50)
+    })
+  })
+
+  it('should call onChildProcessSpawned callback on child process ready', () => {
+    function worker() {}
+    var calledCount = 0;
+    var childProcesses = []
+    function onChildProcessSpawned(childProcess) {
+      childProcesses.push(childProcess)
+    }
+    pool.prepare(worker, null, {processLimit: 4, onChildProcessSpawned});
+    return pool.ready().then(() => {
+      childProcesses.length.should.be.equal(4);
     })
   })
 })

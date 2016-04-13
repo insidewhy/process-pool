@@ -18,20 +18,21 @@ function wrapSubprocess(subProcessPromise) {
 
     return new Promise((resolve, reject) => {
       var onExit = () => reject(Error('killed'))
+      var onMessage = res => {
+        if (typeof res === 'object' && null !== res && ('$$return$$' in res || '$$error$$' in res)) {
+          subProcess.removeListener('exit', onExit)
+          subProcess.removeListener('message', onMessage)
+          if ('$$return$$' in res) {
+            resolve(res.$$return$$)
+          } else {
+            var err = Error(res.$$error$$)
+            err.stack = res.stack
+            reject(err)
+          }
+        }
+      }
       subProcess.once('exit', onExit)
-
-      subProcess.once('message', res => {
-        subProcess.removeListener('exit', onExit)
-
-        if (res.$$error$$) {
-          var err = Error(res.$$error$$)
-          err.stack = res.stack
-          reject(err)
-        }
-        else {
-          resolve(res)
-        }
-      })
+      subProcess.on('message', onMessage)
     })
   })
 }
@@ -69,7 +70,7 @@ export default class {
   prepare(
     func,
     context = undefined,
-    { processLimit = this.processLimit, module: _module } = {}
+    { processLimit = this.processLimit, module: _module, onChildProcessSpawned = _.noop } = {}
   )
   {
     var funcData = {
@@ -80,12 +81,12 @@ export default class {
     }
     this.preparedFuncs.push(funcData)
 
-    var ret = funcData.pool = functionPool(this._spawnSubprocesses(processLimit, funcData))
+    var ret = funcData.pool = functionPool(this._spawnSubprocesses(processLimit, funcData, onChildProcessSpawned))
     ret.kill = this._kill.bind(this, funcData)
     return ret
   }
 
-  _spawnSubprocesses(count, funcData) {
+  _spawnSubprocesses(count, funcData, onChildProcessSpawned = _.noop) {
     var { module, context } = funcData
 
     var spArgs = {
@@ -109,6 +110,7 @@ export default class {
       var spPromise = new Promise(resolve => {
         subProc.send(spArgs)
         subProc.once('message', () => {
+          onChildProcessSpawned(subProc)
           this._subProcessReady()
           resolve(subProc)
         })

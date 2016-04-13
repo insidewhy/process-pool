@@ -150,5 +150,44 @@ oneFunc 2
 ```
 a second later.
 
+## Communicate between main process and worker processes.
+
+You can pass `onChildProcessSpawned` parameter to `pool.prepare` function to get access to spawned child process.
+This function called with `ChildProcess` instance at first argument, which could be used to subscribe and send messages
+to/from child processes:
+
+```javascript
+var Promise = require('bluebird')
+var ProcessPool = require('process-pool')
+var pool = new ProcessPool({ processLimit: 3 })
+
+function task() {
+  return arg => {
+    return new Promise((resolve, reject) => {
+      function onMessage(payload) {
+        if (payload && 'extraData' in payload) {
+          resolve(payload.extraData);
+        }
+        process.removeListener('message', onMessage)
+      }
+      process.on('message', onMessage)
+      process.send({type: 'GET_EXTRA_DATA'});
+    }).then(extraData => {
+      // do something with data, passed from parent process
+    })
+  }
+}
+
+var extraData = {} // fill extra data here
+
+var pooled = pool.prepare(task, null, {onChildProcessSpawned: childProcess => {
+  childProcess.on('message', function(payload) {
+    if (payload && payload.type === 'GET_EXTRA_DATA') {
+      childProcess.send({extraData})
+    }
+  })
+}}
+```
+
 ## Future work
 * Killing a pooled function should drain the wait queue.
