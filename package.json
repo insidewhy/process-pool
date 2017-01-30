@@ -29,13 +29,16 @@
     "source-map": "^0.4.0"
   },
   "devDependencies": {
-    "babel": "^5.0.8",
+    "babel-core": "^6.22.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.22.0",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-stage-2": "^6.22.0",
     "chai": "^1.10.0",
     "mocha": "^2.2.1",
-    "sigh": "^0.12.20",
-    "sigh-babel": "^0.11.5",
-    "sigh-cli": "^0.2.8",
-    "sigh-mocha": "^0.1.2",
+    "sigh": "^0.12.32",
+    "sigh-babel": "^0.12.1",
+    "sigh-cli": "^0.3.0",
+    "sigh-mocha": "^0.1.3",
     "source-map-support": "^0.2.9"
   }
 }
