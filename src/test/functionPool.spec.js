@@ -5,7 +5,7 @@ import invert from '../invert'
 
 describe('function pool', () => {
   it('should schedule a single function call', () => {
-    var pool = functionPool([ arg => Promise.resolve(arg + 5) ])
+    const pool = functionPool([ arg => Promise.resolve(arg + 5) ])
 
     return pool(4).then(result => {
       result.should.equal(9)
@@ -13,10 +13,10 @@ describe('function pool', () => {
   })
 
   it('should schedule four calls over two functions', () => {
-    var defs = _.range(0, 4).map(Promise.defer)
-    var nCalls = 0
-    var pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
-    var promises = _.range(0, 4).map(() => pool())
+    const defs = _.range(0, 4).map(Promise.defer)
+    let nCalls = 0
+    const pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
+    const promises = _.range(0, 4).map(() => pool())
 
     return Promise.delay(10).then(() => {
       nCalls.should.equal(2)
@@ -37,10 +37,10 @@ describe('function pool', () => {
   })
 
   it('should schedule four calls over two functions accounting for rejections', () => {
-    var defs = _.range(0, 4).map(Promise.defer)
-    var nCalls = 0
-    var pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
-    var promises = _.range(0, 4).map(() => pool())
+    const defs = _.range(0, 4).map(Promise.defer)
+    let nCalls = 0
+    const pool = functionPool(_.range(0, 2).map(() => () => defs[nCalls++].promise))
+    const promises = _.range(0, 4).map(() => pool())
 
     return Promise.delay(10).then(() => {
       nCalls.should.equal(2)
@@ -61,8 +61,8 @@ describe('function pool', () => {
   })
 
   it('should replace a free function with a replacement', () => {
-    var pooled = _.range(0, 2).map(idx => () => Promise.resolve((idx + 1) * 10))
-    var pool = functionPool(pooled)
+    const pooled = _.range(0, 2).map(idx => () => Promise.resolve((idx + 1) * 10))
+    const pool = functionPool(pooled)
 
     pool.replace(pooled[1], () => Promise.resolve(5))
 
@@ -72,10 +72,10 @@ describe('function pool', () => {
   })
 
   it('should replace a running function with a replacement', () => {
-    var pooled = _.range(0, 2).map(idx => () => Promise.delay((idx + 1) * 10, 100))
-    var pool = functionPool(pooled)
+    const pooled = _.range(0, 2).map(idx => () => Promise.delay((idx + 1) * 10, 100))
+    const pool = functionPool(pooled)
 
-    var calls = [ pool(), pool(), pool(), pool() ]
+    const calls = [ pool(), pool(), pool(), pool() ]
 
     return Promise.delay(10).then(() => {
       pool.replace(pooled[1], () => Promise.resolve(5))
@@ -93,10 +93,10 @@ describe('function pool', () => {
     })
   })
 
-  var setDelayFunction = (data, instruction) => {
-    var { set, delay } = instruction
+  const setDelayFunction = (data, instruction) => {
+    const { set, delay } = instruction
     if (set) {
-      var oldVal = data.field
+      const oldVal = data.field
       data.field = set
       return Promise.resolve(data.idx + oldVal)
     }
@@ -105,10 +105,10 @@ describe('function pool', () => {
   }
 
   it('should call all free functions via `all`', () => {
-    var pooled = _.range(0, 2).map(idx => {
+    const pooled = _.range(0, 2).map(idx => {
       return setDelayFunction.bind(null, { idx, field: 0 })
     })
-    var pool = functionPool(pooled)
+    const pool = functionPool(pooled)
 
     return Promise.all([
       pool.all({ set: 10 }),
@@ -123,10 +123,10 @@ describe('function pool', () => {
   })
 
   it('should call one free and one running function (when ready) via `all`', () => {
-    var pooled = _.range(0, 2).map(idx => {
+    const pooled = _.range(0, 2).map(idx => {
       return setDelayFunction.bind(null, { idx, field: 0 })
     })
-    var pool = functionPool(pooled)
+    const pool = functionPool(pooled)
 
     return Promise.all([
       pool({ delay: 50 }),

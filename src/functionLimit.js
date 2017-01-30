@@ -6,22 +6,22 @@ import Promise from 'bluebird'
  * will be queued.
  */
 export default function(func, limit) {
-  var activeCalls = 0
-  var callQueue = []
+  let activeCalls = 0
+  const callQueue = []
 
-  var getFreeFunction = () => {
+  const getFreeFunction = () => {
     if (activeCalls < limit) {
       ++activeCalls
       return Promise.resolve()
     }
     else {
-      var deferred = Promise.pending()
+      const deferred = Promise.pending()
       callQueue.push(deferred)
       return deferred.promise
     }
   }
 
-  var callComplete = () => {
+  const callComplete = () => {
     if (callQueue.length)
       callQueue.shift().fulfill()
     else

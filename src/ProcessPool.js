@@ -17,14 +17,14 @@ function wrapSubprocess(subProcessPromise) {
     subProcess.send(args)
 
     return new Promise((resolve, reject) => {
-      var onExit = () => reject(Error('killed'))
+      const onExit = () => reject(Error('killed'))
       subProcess.once('exit', onExit)
 
       subProcess.once('message', res => {
         subProcess.removeListener('exit', onExit)
 
         if (res.$$error$$) {
-          var err = Error(res.$$error$$)
+          const err = Error(res.$$error$$)
           err.stack = res.stack
           reject(err)
         }
@@ -72,7 +72,7 @@ export default class {
     { processLimit = this.processLimit, module: _module } = {}
   )
   {
-    var funcData = {
+    const funcData = {
       context,
       module: _module || module.parent,
       subProcesses: [],
@@ -80,15 +80,15 @@ export default class {
     }
     this.preparedFuncs.push(funcData)
 
-    var ret = funcData.pool = functionPool(this._spawnSubprocesses(processLimit, funcData))
+    const ret = funcData.pool = functionPool(this._spawnSubprocesses(processLimit, funcData))
     ret.kill = this._kill.bind(this, funcData)
     return ret
   }
 
   _spawnSubprocesses(count, funcData) {
-    var { module, context } = funcData
+    const { module, context } = funcData
 
-    var spArgs = {
+    const spArgs = {
       $$prepare$$: funcData.func.toString(),
       modulePaths: module.paths,
       moduleFilename: module.filename
@@ -97,7 +97,7 @@ export default class {
       spArgs.context = context
 
     // TODO: add hooks to detect subprocess exit failure
-    var subProcesses = _.range(0, count).map(() => child_process.fork(
+    const subProcesses = _.range(0, count).map(() => child_process.fork(
       path.join(__dirname, 'childProcess')
     ))
 
@@ -106,7 +106,7 @@ export default class {
     this.nStarting += subProcesses.length
 
     return subProcesses.map((subProc, idx) => {
-      var spPromise = new Promise(resolve => {
+      const spPromise = new Promise(resolve => {
         subProc.send(spArgs)
         subProc.once('message', () => {
           this._subProcessReady()
@@ -114,25 +114,25 @@ export default class {
         })
       })
 
-      var wrapped = wrapSubprocess(spPromise)
-      var ret = (...args) => this.limiter(wrapped.bind(this, ...args))
+      const wrapped = wrapSubprocess(spPromise)
+      const ret = (...args) => this.limiter(wrapped.bind(this, ...args))
       ret.subProcess = subProcesses[idx]
       return ret
     })
   }
 
   _kill(funcData) {
-    var { pool, subProcesses } = funcData
-    var killed = []
+    const { pool, subProcesses } = funcData
+    const killed = []
     pool.running.forEach(runningFunc => {
       killed.push(runningFunc)
-      var { subProcess } = runningFunc
+      const { subProcess } = runningFunc
       subProcess.kill()
       subProcesses.splice(subProcesses.indexOf(subProcess), 1)
     })
 
     if (killed.length > 0) {
-      var newFuncs = this._spawnSubprocesses(killed.length, funcData)
+      const newFuncs = this._spawnSubprocesses(killed.length, funcData)
       killed.forEach((func, idx) => {
         pool.replace(func, newFuncs[idx])
       })

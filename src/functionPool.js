@@ -10,7 +10,7 @@ class PooledFunction {
 
   getNextFreeFunction() {
     if (this.free.length) {
-      var func = this.free.shift()
+      const func = this.free.shift()
       this.running.push(func)
       return Promise.resolve(func)
     }
@@ -27,8 +27,8 @@ class PooledFunction {
   }
 
   _callPriorityFunctions(func) {
-    var { priorityWork } = func
-    var { resolve, args } = priorityWork.shift()
+    const { priorityWork } = func
+    const { resolve, args } = priorityWork.shift()
 
     // this is implemented recursively so that it can deal with extra priority
     // work that is scheduled while it processes existing priority work
@@ -65,7 +65,7 @@ class PooledFunction {
   }
 
   replace(func, replacement) {
-    var idx = this.running.indexOf(func)
+    const idx = this.running.indexOf(func)
     if (idx !== -1)
       this.running.splice(idx, 1)
     else
@@ -75,7 +75,7 @@ class PooledFunction {
   }
 
   _callComplete(func) {
-    var runningIdx = this.running.indexOf(func)
+    const runningIdx = this.running.indexOf(func)
     // it could have been removed by a call to `replace`
     if (runningIdx !== -1) {
       this.running.splice(runningIdx, 1)
@@ -97,16 +97,16 @@ class PooledFunction {
   }
 
   all(...args) {
-    var { running } = this
-    var free = this.free.slice()
+    const { running } = this
+    const free = this.free.slice()
     this.free.length = 0
 
-    var promises = free.map(func => func(...args))
+    const promises = free.map(func => func(...args))
 
-    var runningPromises = running.map(func => {
+    const runningPromises = running.map(func => {
       return new Promise(resolve => {
-        var { priorityWork } = func
-        var data = { resolve, args }
+        const { priorityWork } = func
+        const data = { resolve, args }
         if (priorityWork)
           priorityWork.push(data)
         else
@@ -137,9 +137,9 @@ class PooledFunction {
  * until the promise returned by the outstanding call is resolved or rejected.
  */
 export default function(funcs) {
-  var pooled = new PooledFunction(funcs)
+  const pooled = new PooledFunction(funcs)
 
-  var ret = pooled.schedule.bind(pooled)
+  const ret = pooled.schedule.bind(pooled)
   ret.replace = pooled.replace.bind(pooled)
   ret.all = pooled.all.bind(pooled)
   ret.free = pooled.free
