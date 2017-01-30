@@ -4,7 +4,7 @@ import path from 'path'
 import _ from 'lodash'
 
 import functionPool from './functionPool'
-import functionLimit from './functionLimit'
+import activeCallLimiter from './activeCallLimiter'
 
 /**
  * Take sub-process and wrap the messaging to/back into a function that accepts
@@ -48,7 +48,7 @@ export default class {
   }
 
   _reset() {
-    this.limiter = functionLimit(func => func(), this.processLimit)
+    this.limiter = activeCallLimiter(func => func(), this.processLimit)
     this.preparedFuncs = []
     this.nStarting = 0 // number of processes starting up
   }
