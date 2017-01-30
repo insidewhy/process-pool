@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/sighjs/sigh.git"
+    "url": "git://github.com/ohjames/process-pool.git"
   },
   "keywords": [
     "subprocess",
