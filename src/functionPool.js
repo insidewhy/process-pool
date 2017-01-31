@@ -5,7 +5,7 @@ class PooledFunction {
   /**
    * @param {Array<Function>} funcs The object manages these functions, ensuring that
    *                                whenever a function is called it may not be
-   *                                called until the promise it returned has
+   *                                called again until the promise it returned has
    *                                resolved or rejected.
    */
   constructor(funcs) {
@@ -16,8 +16,8 @@ class PooledFunction {
 
   /**
    * @return {Promise<Function>} Resolves to a free function, which may involve
-   *                             waiting for one to be ready if all functions
-   *                             have outstanding promises.
+   *                             a delay in order to fulfil the conditions listed
+   *                             in the constructor's documentation.
    */
   getNextFreeFunction() {
     if (this.free.length) {
