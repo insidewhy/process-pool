@@ -1,6 +1,6 @@
 {
   "name": "process-pool",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "A process pool for efficient delegation of work over multiple CPU cores.",
   "main": "./lib/ProcessPool",
   "directories": {
