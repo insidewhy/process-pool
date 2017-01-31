@@ -2,12 +2,23 @@ import Promise from 'bluebird'
 import _ from 'lodash'
 
 class PooledFunction {
+  /**
+   * @param {Array<Function>} funcs The object manages these functions, ensuring that
+   *                                whenever a function is called it may not be
+   *                                called until the promise it returned has
+   *                                resolved or rejected.
+   */
   constructor(funcs) {
     this.free = funcs.slice(0)
     this.running = []
     this.callQueue = []
   }
 
+  /**
+   * @return {Promise<Function>} Resolves to a free function, which may involve
+   *                             waiting for one to be ready if all functions
+   *                             have outstanding promises.
+   */
   getNextFreeFunction() {
     if (this.free.length) {
       const func = this.free.shift()
@@ -83,6 +94,10 @@ class PooledFunction {
     }
   }
 
+  /**
+   * When the user calls the return value of the higher order function this
+   * is the method that gets called to track the wrapped function's state.
+   */
   schedule(...args) {
     return this.getNextFreeFunction().then(func => {
       return func(...args).then(result => {
@@ -132,9 +147,10 @@ class PooledFunction {
 }
 
 /**
- * This schedules work out to a number of promise returning functions, after
- * each function has been called it will remain unavailable for future calls
- * until the promise returned by the outstanding call is resolved or rejected.
+ * Like a higher order functions but takes an array of functions and returns a single
+ * function that manages the passed functions using ProcessPool.
+ * @return {Function} Arguments passed to this function are managed with
+ *                    ProcessPool.prototype.schedule.
  */
 export default function(funcs) {
   const pooled = new PooledFunction(funcs)
