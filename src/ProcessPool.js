@@ -1,6 +1,7 @@
 import Promise from 'bluebird'
 import child_process from 'child_process'
 import path from 'path'
+import os from 'os'
 import _ from 'lodash'
 
 import functionPool from './functionPool'
@@ -41,8 +42,7 @@ function wrapSubprocess(subProcessPromise) {
  *  * length: Number of processes to run at any one time
  */
 export default class {
-  // TODO: default to number of CPU cores
-  constructor({ processLimit = 4 } = {}) {
+  constructor({ processLimit = os.cpus().length } = {}) {
     this.processLimit = processLimit
     this._reset()
   }
